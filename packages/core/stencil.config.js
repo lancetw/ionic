@@ -1,14 +1,16 @@
 exports.config = {
   namespace: 'Ionic',
-  buildDest: 'dist',
+  buildDir: 'dist',
+  publicPath: '/dist',
   generateCollection: true,
   bundles: [
-    { components: ['ion-app', 'ion-content', 'ion-footer', 'ion-header', 'ion-navbar', 'ion-page', 'ion-title', 'ion-toolbar'] },
+    { components: ['ion-app', 'ion-content', 'ion-fixed', 'ion-footer', 'ion-header', 'ion-navbar', 'ion-page', 'ion-title', 'ion-toolbar'] },
     { components: ['ion-avatar', 'ion-badge', 'ion-thumbnail'] },
     { components: ['ion-button', 'ion-buttons', 'ion-icon'] },
     { components: ['ion-card', 'ion-card-content', 'ion-card-header', 'ion-card-title'] },
+    { components: ['ion-fab', 'ion-fab-button', 'ion-fab-list'] },
     { components: ['ion-gesture', 'ion-scroll'], priority: 'low' },
-    { components: ['ion-item', 'ion-item-divider', 'ion-label', 'ion-list', 'ion-list-header', 'ion-skeleton-text'] },
+    { components: ['ion-item', 'ion-item-divider', 'ion-item-sliding', 'ion-item-options', 'ion-label', 'ion-list', 'ion-list-header', 'ion-skeleton-text'] },
     { components: ['ion-loading', 'ion-loading-controller'] },
     { components: ['ion-menu'], priority: 'low' },
     { components: ['ion-modal', 'ion-modal-controller'] },
@@ -20,3 +22,7 @@ exports.config = {
   ],
   preamble: '(C) Ionic http://ionicframework.com - MIT License'
 };
+
+exports.devServer = {
+  watchGlob: ['demos/**/*', '/dist/***/*', 'src/**/*.html']
+}

@@ -1,4 +1,4 @@
-import { Ionic } from '@stencil/core';
+const Ionic = (<any>window).Ionic;
 
 
 /**

@@ -1,5 +1,5 @@
-import { Component, h, Prop, State, VNodeData, Ionic } from '@stencil/core';
-import { CssClassObject } from '../../utils/interfaces';
+import { Component, h, Prop, State, VNodeData } from '@stencil/core';
+
 
 @Component({
   tag: 'ion-icon',
@@ -21,11 +21,6 @@ export class Icon {
    * @input {string} Specifies the label to use for accessibility. Defaults to the icon name.
    */
   @State() label: string = '';
-
-  /**
-   * @input {string} Specifies the mode to use for the icon.
-   */
-  @State() iconMode: string = '';
 
   /**
    * @input {string} Specifies the svg to use for the icon.
@@ -61,110 +56,165 @@ export class Icon {
   @Prop() hidden: boolean = false;
 
   /**
-   * 
+   *
    * @input {string} Path to the svg files for icons
    */
   @Prop() assetsDir: string = 'src'
 
-  fakeFetch(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const request = new XMLHttpRequest();
 
-      request.addEventListener('load', function () {
-        resolve(this.responseText);
-      });
+  @State() svgContent: string = null;
 
-      request.addEventListener('error', function () {
-        reject(`error: ${this.statusText} / ${this.status}`);
-      });
 
-      request.open('GET', url, true);
-      request.send();
-    });
+  getSvgUrl() {
+    const iconName = this.iconName;
+    if (iconName !== null) {
+      return `${this.assetsDir}/${iconName}.svg`;
+    }
+
+    return null;
   }
 
 
-  fetchSvg(icon: string) {
-    this.fakeFetch(`${this.assetsDir}/${icon}.svg`).then((data) => {
-      this.iconSvg = data;
-    }).catch((err) =>  {
-      console.error('Icon could not be loaded:', err);
-    })
-  }
-
-  getElementClass(): string {
+  get iconName() {
     let iconName: string;
 
-    // If no name was passed set iconName to null
+    // if no name was passed set iconName to null
     if (!this.name) {
-      iconName = null;
-    } else if (!(/^md-|^ios-|^logo-/.test(this.name))) {
+      return null;
+    }
+
+    if (!(/^md-|^ios-|^logo-/.test(this.name))) {
       // this does not have one of the defaults
       // so lets auto add in the mode prefix for them
-      iconName = this.iconMode + '-' + this.name;
+      iconName = this.mode + '-' + this.name;
+
     } else if (this.name) {
+      // this icon already has a prefix
       iconName = this.name;
     }
 
-    // If an icon was passed in using the ios or md attributes
+    // if an icon was passed in using the ios or md attributes
     // set the iconName to whatever was passed in
-    if (this.ios && this.iconMode === 'ios') {
+    if (this.ios && this.mode === 'ios') {
       iconName = this.ios;
-    } else if (this.md && this.iconMode === 'md') {
+
+    } else if (this.md && this.mode === 'md') {
       iconName = this.md;
     }
 
-    if ((iconName === null) || (this.hidden === true)) {
-      console.warn('Icon is hidden.');
-      return 'hide';
-    }
-
-    let iconMode = iconName.split('-', 2)[0];
-    if (
-      iconMode === 'ios' &&
-      this.isActive === false &&
-      iconName.indexOf('logo-') < 0 &&
-      iconName.indexOf('-outline') < 0) {
-      iconName += '-outline';
-    }
-
-    let label = iconName
-      .replace('ios-', '')
-      .replace('md-', '')
-      .replace('-', ' ');
-    this.label = label;
-
-    this.fetchSvg(iconName);
-
-    return `ion-${iconName}`;
+    return iconName;
   }
 
-  hostData(): VNodeData {
-    // TODO set the right iconMode based on the config
-    let iconMode = this.mode === 'md' ? 'md' : 'ios';
-    this.iconMode = iconMode || Ionic.config.get('iconMode');
 
-    const iconClasses: CssClassObject = []
-      .concat(
-        this.getElementClass(),
-      )
-      .reduce((prevValue, cssClass) => {
-        prevValue[cssClass] = true;
-        return prevValue;
-       }, {});
+  hostData(): VNodeData {
+    const attrs: {[attrName: string]: string} = {
+      'role': 'img'
+    };
+
+    if (this.hidden) {
+      // adds the hidden attribute
+      attrs['hidden'] = '';
+    }
+
+    if (this.label) {
+      // user provided label
+      attrs['aria-label'] = this.label;
+
+    } else {
+      // come up with the label based on the icon name
+      const iconName = this.iconName;
+      if (iconName) {
+        attrs['aria-label'] = iconName
+                                .replace('ios-', '')
+                                .replace('md-', '')
+                                .replace('-', ' ');
+      }
+    }
 
     return {
-      class: iconClasses,
-      attrs: {
-        'role': 'img'
-      }
+      attrs
     };
   }
 
-  render() {
-    return(
-      <div innerHTML={this.iconSvg}>
-      </div>
-    );
+
+  loadSvgContent(svgUrl: string) {
+    IonIcon.loadCallbacks[svgUrl] = IonIcon.loadCallbacks[svgUrl] || [];
+
+    IonIcon.loadCallbacks[svgUrl].push((loadedSvgContent: string) => {
+      this.svgContent = loadedSvgContent;
+    });
+
+    if (IonIcon.activeRequests[svgUrl]) {
+      return;
+    }
+
+    IonIcon.activeRequests[svgUrl] = true;
+
+    console.log('request', svgUrl)
+
+    const xhr = new XMLHttpRequest();
+    xhr.addEventListener('load', function() {
+
+      if (this.status > 203) {
+        console.error('Icon could not be loaded:', svgUrl);
+        return;
+      }
+
+      IonIcon.svgContents[svgUrl] = this.responseText;
+      delete IonIcon.activeRequests[svgUrl];
+
+      const svgLoadCallbacks = IonIcon.loadCallbacks[svgUrl];
+      if (svgLoadCallbacks) {
+
+        for (var i = 0; i < svgLoadCallbacks.length; i++) {
+          svgLoadCallbacks[i](this.responseText);
+        }
+        delete IonIcon.loadCallbacks[svgUrl];
+      }
+    });
+
+    xhr.addEventListener('error', function () {
+      console.error('Icon could not be loaded:', svgUrl);
+    });
+
+    xhr.open('GET', svgUrl, true);
+    xhr.send();
   }
+
+
+  render() {
+    const svgUrl = this.getSvgUrl();
+    if (svgUrl === null) {
+      // we don't have good data
+      return(<div class="missing-svg"></div>);
+    }
+
+    const svgContent = IonIcon.svgContents[svgUrl];
+    if (svgContent === this.svgContent) {
+      // we've already loaded up this svg at one point
+      return(
+        <div innerHTML={svgContent}></div>
+      );
+    }
+
+    // start loading the svg file
+    this.loadSvgContent(svgUrl);
+
+    // actively requesting the svg, so let's just show a div for now
+    return(<div class="loading-svg"></div>);
+  }
+
+}
+
+
+const IonIcon: GlobalIonIcon = {
+  activeRequests: {},
+  loadCallbacks: [] as any,
+  svgContents: {}
+};
+
+interface GlobalIonIcon {
+  activeRequests: {[url: string]: boolean};
+  loadCallbacks: {[url: string]: Function[]};
+  svgContents: {[url: string]: string};
 }

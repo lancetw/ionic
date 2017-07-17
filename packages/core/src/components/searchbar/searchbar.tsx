@@ -256,7 +256,7 @@ export class Searchbar {
    * Positions the input placeholder
    */
   positionPlaceholder() {
-    const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
+    const isRTL = document.dir === 'rtl';
     const inputEle = this.$el.querySelector('.searchbar-input') as HTMLElement;
     const iconEle = this.$el.querySelector('.searchbar-search-icon') as HTMLElement;
 
@@ -296,7 +296,7 @@ export class Searchbar {
    * Show the iOS Cancel button on focus, hide it offscreen otherwise
    */
   positionCancelButton() {
-    const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
+    const isRTL = document.dir === 'rtl';
     const cancelButton = this.$el.querySelector('.searchbar-ios-cancel') as HTMLElement;
     const shouldShowCancel = this.focused;
 
@@ -350,27 +350,27 @@ export class Searchbar {
         <div class="searchbar-search-icon"></div>
         <input
           class="searchbar-input"
-          oninput={this.inputChanged.bind(this)}
-          onblur={this.inputBlurred.bind(this)}
-          onfocus={this.inputFocused.bind(this)}
+          onInput={this.inputChanged.bind(this)}
+          onBlur={this.inputBlurred.bind(this)}
+          onFocus={this.inputFocused.bind(this)}
           placeholder={this.placeholder}
           type={this.type}
           value={this.value}
-          autocomplete={this.autocomplete}
-          autocorrect={this.autocorrect}
-          spellcheck={this.spellcheck}/>
+          autoComplete={this.autocomplete}
+          autoCorrect={this.autocorrect}
+          spellCheck={this.spellcheck}/>
         <ion-button
           clear
           class="searchbar-clear-icon"
-          onclick={this.clearInput.bind(this)}
-          onmousedown={this.clearInput.bind(this)}>
+          onClick={this.clearInput.bind(this)}
+          onMousedown={this.clearInput.bind(this)}>
         </ion-button>
       </div>,
       <ion-button
         tabindex={this.activated ? 1 : -1}
         clear
-        onclick={this.cancelSearchbar.bind(this)}
-        onmousedown={this.cancelSearchbar.bind(this)}
+        onClick={this.cancelSearchbar.bind(this)}
+        onMousedown={this.cancelSearchbar.bind(this)}
         class="searchbar-ios-cancel">
           {this.cancelButtonText}
       </ion-button>
