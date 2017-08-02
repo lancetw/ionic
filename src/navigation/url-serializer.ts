@@ -59,7 +59,7 @@ export class UrlSerializer {
    * into a URL string. Turn each segment into a string and concat them to a URL.
    */
   serialize(path: NavSegment[]): string {
-    return '/' + path.map(segment => segment.id).join('/');
+    return '/' + path.map(segment => segment.id.replace(/\/\:.*/, '')).join('/');
   }
 
   /**
