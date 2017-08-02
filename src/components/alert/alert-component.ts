@@ -218,7 +218,7 @@ export class AlertCmp {
   @HostListener('body:keyup', ['$event'])
   keyUp(ev: KeyboardEvent) {
     if (this.enabled && this._viewCtrl.isLast()) {
-      if (ev.keyCode === KEY_ENTER) {
+      if (this.d.enableEnter && ev.keyCode === KEY_ENTER) {
         if (this.lastClick + 1000 < Date.now()) {
           // do not fire this click if there recently was already a click
           // this can happen when the button has focus and used the enter
@@ -229,7 +229,7 @@ export class AlertCmp {
           this.btnClick(button);
         }
 
-      } else if (ev.keyCode === KEY_ESCAPE) {
+      } else if (this.d.enableEsc && ev.keyCode === KEY_ESCAPE) {
         console.debug(`alert, escape button`);
         this.bdClick();
       }
